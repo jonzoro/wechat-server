@@ -14,6 +14,9 @@ import java.util.Map;
 @Service
 public class WxPortalServiceImpl implements WxPortalService {
 
+    private static final String KEY_FUNC = "func";
+    private static final String KEY_INFO = "info";
+
     private final SysNoteService sysNoteService;
 
     @Autowired
@@ -42,10 +45,10 @@ public class WxPortalServiceImpl implements WxPortalService {
 
     private void funcSwitcher(String content, WxMpXmlOutTextMessage textMessage) {
         Map<String, Object> parser = contentParser(content);
-        String func = parser.get("func").toString();
+        String func = parser.get(KEY_FUNC).toString();
         if (ProjectConstant.FUNC_NOTE.equals(func)) {
             // 备忘录
-            NoteFuncInfo info = (NoteFuncInfo) parser.get("info");
+            NoteFuncInfo info = (NoteFuncInfo) parser.get(KEY_INFO);
             sysNoteService.opByNoteFuncInfo(info, textMessage);
 
         } else if (ProjectConstant.FUNC_WEATHER.equals(func)) {
@@ -65,16 +68,12 @@ public class WxPortalServiceImpl implements WxPortalService {
             String title = contentArray[2];
             String note = contentArray[3];
 
-            result.put("func", func);
-            result.put("info", NoteFuncInfo.newBuilder()
-                    .operation(operation)
-                    .title(title)
-                    .content(note)
-                    .build());
+            result.put(KEY_FUNC, func);
+            result.put(KEY_INFO, NoteFuncInfo.newBuilder().operation(operation).title(title).content(note).build());
         } else if (ProjectConstant.FUNC_WEATHER.equals(func)) {
 
         } else {
-            result.put("func", ProjectConstant.FUNC_DEFAULT);
+            result.put(KEY_FUNC, ProjectConstant.FUNC_DEFAULT);
         }
         return result;
     }
