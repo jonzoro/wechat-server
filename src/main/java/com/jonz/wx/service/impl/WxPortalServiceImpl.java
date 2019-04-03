@@ -44,13 +44,15 @@ public class WxPortalServiceImpl implements WxPortalService {
         Map<String, Object> parser = contentParser(content);
         String func = parser.get("func").toString();
         if (ProjectConstant.FUNC_NOTE.equals(func)) {
-            // 备忘录功能
+            // 备忘录
             NoteFuncInfo info = (NoteFuncInfo) parser.get("info");
             sysNoteService.opByNoteFuncInfo(info, textMessage);
 
         } else if (ProjectConstant.FUNC_WEATHER.equals(func)) {
             // 天气查询
 
+        } else {
+            textMessage.setContent(ProjectConstant.RESPONSE_DEFAULT);
         }
     }
 
@@ -69,6 +71,10 @@ public class WxPortalServiceImpl implements WxPortalService {
                     .title(title)
                     .content(note)
                     .build());
+        } else if (ProjectConstant.FUNC_WEATHER.equals(func)) {
+
+        } else {
+            result.put("func", ProjectConstant.FUNC_DEFAULT);
         }
         return result;
     }

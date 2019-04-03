@@ -18,6 +18,8 @@ public final class ProjectConstant {
     // 文本信息处理相关
     public static final String SEPARATOR = "-";
 
+    public static final String RESPONSE_DEFAULT = "已阅。";
+    public static final String FUNC_DEFAULT = "default";
     public static final String FUNC_NOTE = "note";
     public static final String FUNC_WEATHER = "weather";
 
