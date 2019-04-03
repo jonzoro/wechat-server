@@ -2,7 +2,8 @@ package com.jonz.wx.service.impl;
 
 import com.jonz.wx.core.ProjectConstant;
 import com.jonz.wx.model.vo.NoteFuncInfo;
-import com.jonz.wx.service.SysNoteService;
+import com.jonz.wx.service.FunFoodService;
+import com.jonz.wx.service.FunNoteService;
 import com.jonz.wx.service.WxPortalService;
 import me.chanjar.weixin.mp.bean.message.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +18,13 @@ public class WxPortalServiceImpl implements WxPortalService {
     private static final String KEY_FUNC = "func";
     private static final String KEY_INFO = "info";
 
-    private final SysNoteService sysNoteService;
+    private final FunNoteService funNoteService;
+    private final FunFoodService foodService;
 
     @Autowired
-    public WxPortalServiceImpl(SysNoteService sysNoteService) {
-        this.sysNoteService = sysNoteService;
+    public WxPortalServiceImpl(FunNoteService funNoteService, FunFoodService foodService) {
+        this.funNoteService = funNoteService;
+        this.foodService = foodService;
     }
 
     /***
@@ -49,29 +52,35 @@ public class WxPortalServiceImpl implements WxPortalService {
         if (ProjectConstant.FUNC_NOTE.equals(func)) {
             // 备忘录
             NoteFuncInfo info = (NoteFuncInfo) parser.get(KEY_INFO);
-            sysNoteService.opByNoteFuncInfo(info, textMessage);
+            funNoteService.opByNoteFuncInfo(info, textMessage);
 
         } else if (ProjectConstant.FUNC_WEATHER.equals(func)) {
             // 天气查询
+
+        } else if (ProjectConstant.FUNC_GUESS.equals(func)) {
+            // 随机推荐吃什么
+            foodService.opByFoodFuncInfo(textMessage);
 
         } else {
             textMessage.setContent(ProjectConstant.RESPONSE_DEFAULT);
         }
     }
 
-    private Map<String, Object> contentParser(String content) {
-        String[] contentArray = content.split(ProjectConstant.SEPARATOR);
-        String func = contentArray[0];
+    private Map<String, Object> contentParser(String rawContent) {
+        String[] cArray = rawContent.split(ProjectConstant.SEPARATOR);
+        String func = cArray[0];
         Map<String, Object> result = new HashMap<>();
-        if (ProjectConstant.FUNC_NOTE.equals(func)) {
-            String operation = contentArray[1];
-            String title = contentArray[2];
-            String note = contentArray[3];
+        if (ProjectConstant.FUNC_NOTE.equals(func) && cArray.length == 4) {
+            String operation = cArray[1];
+            String title = cArray[2];
+            String content = cArray[3];
 
             result.put(KEY_FUNC, func);
-            result.put(KEY_INFO, NoteFuncInfo.newBuilder().operation(operation).title(title).content(note).build());
-        } else if (ProjectConstant.FUNC_WEATHER.equals(func)) {
+            result.put(KEY_INFO, NoteFuncInfo.newBuilder().operation(operation).title(title).content(content).build());
+        } else if (ProjectConstant.FUNC_WEATHER.equals(func) && cArray.length == 3) {
 
+        } else if (ProjectConstant.FUNC_GUESS.equals(func) && cArray.length == 1) {
+            result.put(KEY_FUNC, func);
         } else {
             result.put(KEY_FUNC, ProjectConstant.FUNC_DEFAULT);
         }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jonz.wx.dao.FunFoodMapper">
+  <resultMap id="BaseResultMap" type="com.jonz.wx.model.FunFood">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="dish_name" jdbcType="VARCHAR" property="dishName" />
+    <result column="restaurant" jdbcType="VARCHAR" property="restaurant" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+  </resultMap>
+</mapper>

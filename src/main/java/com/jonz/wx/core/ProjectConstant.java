@@ -22,6 +22,7 @@ public final class ProjectConstant {
     public static final String FUNC_DEFAULT = "default";
     public static final String FUNC_NOTE = "note";
     public static final String FUNC_WEATHER = "weather";
+    public static final String FUNC_GUESS = "吃啥";
 
     public static final String OP_ADD = "add";
     public static final String OP_UPDATE = "update";

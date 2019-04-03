@@ -2,8 +2,8 @@ package com.jonz.wx.model;
 
 import javax.persistence.*;
 
-@Table(name = "sys_note")
-public class SysNote {
+@Table(name = "fun_note")
+public class FunNote {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
