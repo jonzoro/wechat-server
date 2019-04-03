@@ -4,15 +4,13 @@ import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
+import me.chanjar.weixin.mp.bean.message.WxMpXmlOutTextMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * @author Binary Wang(https://github.com/binarywang)
- */
 @RestController
 @RequestMapping("/wx/portal/{appid}")
 public class WxPortalController {
@@ -28,6 +26,9 @@ public class WxPortalController {
         this.messageRouter = messageRouter;
     }
 
+    /***
+     * 认证调试接口
+     */
     @GetMapping(produces = "text/plain;charset=utf-8")
     public String authGet(@PathVariable String appid,
                           @RequestParam(name = "signature", required = false) String signature,
@@ -36,7 +37,7 @@ public class WxPortalController {
                           @RequestParam(name = "echostr", required = false) String echostr) {
 
         this.logger.info("\n接收到来自微信服务器的认证消息：[{}, {}, {}, {}]", signature,
-            timestamp, nonce, echostr);
+                timestamp, nonce, echostr);
         if (StringUtils.isAnyBlank(signature, timestamp, nonce, echostr)) {
             throw new IllegalArgumentException("请求参数非法，请核实!");
         }
@@ -52,6 +53,9 @@ public class WxPortalController {
         return "非法请求";
     }
 
+    /***
+     * 用户消息接口
+     */
     @PostMapping(produces = "application/xml; charset=UTF-8")
     public String post(@PathVariable String appid,
                        @RequestBody String requestBody,
@@ -62,8 +66,8 @@ public class WxPortalController {
                        @RequestParam(name = "encrypt_type", required = false) String encType,
                        @RequestParam(name = "msg_signature", required = false) String msgSignature) {
         this.logger.info("\n接收微信请求：[openid=[{}], [signature=[{}], encType=[{}], msgSignature=[{}],"
-                + " timestamp=[{}], nonce=[{}], requestBody=[\n{}\n] ",
-            openid, signature, encType, msgSignature, timestamp, nonce, requestBody);
+                        + " timestamp=[{}], nonce=[{}], requestBody=[\n{}\n] ",
+                openid, signature, encType, msgSignature, timestamp, nonce, requestBody);
 
         if (!this.wxService.switchover(appid)) {
             throw new IllegalArgumentException(String.format("未找到对应appid=[%s]的配置，请核实！", appid));
@@ -77,29 +81,25 @@ public class WxPortalController {
         if (encType == null) {
             // 明文传输的消息
             WxMpXmlMessage inMessage = WxMpXmlMessage.fromXml(requestBody);
+            // 通过路由去转换消息的类型，返回的是WxMpXmlOutMessage的子类
             WxMpXmlOutMessage outMessage = this.route(inMessage);
-            if (outMessage == null) {
-                return "";
-            }
-
-            out = outMessage.toXml();
+            out = outMsgProcessor(outMessage, false);
         } else if ("aes".equalsIgnoreCase(encType)) {
             // aes加密的消息
             WxMpXmlMessage inMessage = WxMpXmlMessage.fromEncryptedXml(requestBody, wxService.getWxMpConfigStorage(),
-                timestamp, nonce, msgSignature);
+                    timestamp, nonce, msgSignature);
             this.logger.debug("\n消息解密后内容为：\n{} ", inMessage.toString());
             WxMpXmlOutMessage outMessage = this.route(inMessage);
-            if (outMessage == null) {
-                return "";
-            }
-
-            out = outMessage.toEncryptedXml(wxService.getWxMpConfigStorage());
+            out = outMsgProcessor(outMessage, true);
         }
 
-        this.logger.debug("\n组装回复信息：{}", out);
+        this.logger.info("\n组装回复信息：{}", out);
         return out;
     }
 
+    /***
+     * 微信消息路由器
+     */
     private WxMpXmlOutMessage route(WxMpXmlMessage message) {
         try {
             return this.messageRouter.route(message);
@@ -108,6 +108,25 @@ public class WxPortalController {
         }
 
         return null;
+    }
+
+    /***
+     * 消息回复处理
+     */
+    private String outMsgProcessor(WxMpXmlOutMessage outMessage, Boolean isEncrypt) {
+        if (outMessage == null) {
+            return "";
+        } else if (outMessage.getClass() == WxMpXmlOutTextMessage.class) {
+            ((WxMpXmlOutTextMessage) outMessage).setContent("hi!!!!");
+        }
+
+        String out;
+        if (isEncrypt) {
+            out = outMessage.toEncryptedXml(wxService.getWxMpConfigStorage());
+        } else {
+            out = outMessage.toXml();
+        }
+        return out;
     }
 
 }
