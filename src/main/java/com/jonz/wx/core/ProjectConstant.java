@@ -13,4 +13,16 @@ public final class ProjectConstant {
     public static final String CONTROLLER_PACKAGE = BASE_PACKAGE + ".controller";//生成的Controller所在包
 
     public static final String MAPPER_INTERFACE_REFERENCE = BASE_PACKAGE + ".core.Mapper";//Mapper插件基础接口的完全限定名
+
+
+    // 文本信息处理相关
+    public static final String SEPARATOR = "-";
+
+    public static final String FUNC_NOTE = "note";
+    public static final String FUNC_WEATHER = "weather";
+
+    public static final String OP_ADD = "add";
+    public static final String OP_UPDATE = "update";
+    public static final String OP_DELETE = "delete";
+    public static final String OP_QUERY = "query";
 }

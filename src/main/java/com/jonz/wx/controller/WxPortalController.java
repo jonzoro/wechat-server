@@ -1,10 +1,10 @@
 package com.jonz.wx.controller;
 
+import com.jonz.wx.service.WxPortalService;
 import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
-import me.chanjar.weixin.mp.bean.message.WxMpXmlOutTextMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +20,13 @@ public class WxPortalController {
 
     private WxMpMessageRouter messageRouter;
 
+    private WxPortalService wxPortalService;
+
     @Autowired
-    public WxPortalController(WxMpService wxService, WxMpMessageRouter messageRouter) {
+    public WxPortalController(WxMpService wxService, WxMpMessageRouter messageRouter, WxPortalService wxPortalService) {
         this.wxService = wxService;
         this.messageRouter = messageRouter;
+        this.wxPortalService = wxPortalService;
     }
 
     /***
@@ -83,14 +86,20 @@ public class WxPortalController {
             WxMpXmlMessage inMessage = WxMpXmlMessage.fromXml(requestBody);
             // 通过路由去转换消息的类型，返回的是WxMpXmlOutMessage的子类
             WxMpXmlOutMessage outMessage = this.route(inMessage);
-            out = outMsgProcessor(outMessage, false);
+            // 异步回复消息
+            if (null == outMessage) { return ""; }
+            // 消息回复处理器
+            wxPortalService.outMsgProcessor(inMessage, outMessage);
+            out = outMessage.toXml();
         } else if ("aes".equalsIgnoreCase(encType)) {
             // aes加密的消息
             WxMpXmlMessage inMessage = WxMpXmlMessage.fromEncryptedXml(requestBody, wxService.getWxMpConfigStorage(),
                     timestamp, nonce, msgSignature);
             this.logger.debug("\n消息解密后内容为：\n{} ", inMessage.toString());
             WxMpXmlOutMessage outMessage = this.route(inMessage);
-            out = outMsgProcessor(outMessage, true);
+            if (null == outMessage) { return ""; }
+            wxPortalService.outMsgProcessor(inMessage, outMessage);
+            out = outMessage.toEncryptedXml(wxService.getWxMpConfigStorage());
         }
 
         this.logger.info("\n组装回复信息：{}", out);
@@ -109,24 +118,4 @@ public class WxPortalController {
 
         return null;
     }
-
-    /***
-     * 消息回复处理
-     */
-    private String outMsgProcessor(WxMpXmlOutMessage outMessage, Boolean isEncrypt) {
-        if (outMessage == null) {
-            return "";
-        } else if (outMessage.getClass() == WxMpXmlOutTextMessage.class) {
-            ((WxMpXmlOutTextMessage) outMessage).setContent("hi!!!!");
-        }
-
-        String out;
-        if (isEncrypt) {
-            out = outMessage.toEncryptedXml(wxService.getWxMpConfigStorage());
-        } else {
-            out = outMessage.toXml();
-        }
-        return out;
-    }
-
 }
