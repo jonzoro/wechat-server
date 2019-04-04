@@ -1,6 +1,7 @@
 package com.jonz.wx.service.impl;
 
 import com.jonz.wx.core.ProjectConstant;
+import com.jonz.wx.model.vo.FoodFuncInfo;
 import com.jonz.wx.model.vo.NoteFuncInfo;
 import com.jonz.wx.service.FunFoodService;
 import com.jonz.wx.service.FunNoteService;
@@ -59,7 +60,8 @@ public class WxPortalServiceImpl implements WxPortalService {
 
         } else if (ProjectConstant.FUNC_GUESS.equals(func)) {
             // 随机推荐吃什么
-            foodService.opByFoodFuncInfo(textMessage);
+            FoodFuncInfo info = (FoodFuncInfo) parser.get(KEY_INFO);
+            foodService.opByFoodFuncInfo(info, textMessage);
 
         } else {
             textMessage.setContent(ProjectConstant.RESPONSE_DEFAULT);
@@ -79,8 +81,10 @@ public class WxPortalServiceImpl implements WxPortalService {
             result.put(KEY_INFO, NoteFuncInfo.newBuilder().operation(operation).title(title).content(content).build());
         } else if (ProjectConstant.FUNC_WEATHER.equals(func) && cArray.length == 3) {
 
-        } else if (ProjectConstant.FUNC_GUESS.equals(func) && cArray.length == 1) {
+        } else if (ProjectConstant.FUNC_GUESS.equals(func) && cArray.length == 2) {
+            String type = cArray[1];
             result.put(KEY_FUNC, func);
+            result.put(KEY_INFO, FoodFuncInfo.newBuilder().type(type).build());
         } else {
             result.put(KEY_FUNC, ProjectConstant.FUNC_DEFAULT);
         }
